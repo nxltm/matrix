@@ -1,174 +1,219 @@
-![Matrix screenshot](/screenshot.png?raw=true "Matrix's default appearance.")
+# 32chars.js
 
-# matrix (web-based green code rain, made with love)
+## Disclaimer
 
-**_News Update September 2022:_** this project was [featured in Vice Motherboard](https://www.vice.com/en/article/88qvn3/coder-makes-matrix-green-rain-simulator-that-lilly-wachowski-says-is-better-than-the-original), along with insight into the effect from Lilly Wachowski.
+The program in this repository has a potential to be used maliciously, such as injecting obfuscated malicious code in websites. **I am solely never held responsible for any damage caused by this program or the code it outputs.**
 
-## Quick Links
+## Introduction
 
-- [Classic Matrix code](https://rezmason.github.io/matrix)
-- [Starting from a blank screen (`skipIntro=false`)](https://rezmason.github.io/matrix/?skipIntro=false) (which some people really like, but isn't the default mode)
-- [3D mode](https://rezmason.github.io/matrix?version=3d)
-- Mirror mode, [with camera](https://rezmason.github.io/matrix/?version=updated&effect=mirror&camera=true) and [without](https://rezmason.github.io/matrix/?version=updated&effect=mirror). (Click to make ripples.)
-- [Matrix Resurrections updated code](https://rezmason.github.io/matrix?version=resurrections)
-- [Trinity mode](https://rezmason.github.io/matrix?version=trinity)
-- [Operator Matrix code (with ripple effects)](https://rezmason.github.io/matrix?version=operator)
-- [Megacity Mode, as seen in Revolutions](https://rezmason.github.io/matrix?version=megacity)
+32chars.js is a JavaScript encoder that obfuscates a piece of text into the shortest possible valid JavaScript code with only 32 ASCII symbol and punctuation characters: `` `~!@#$%^&*()_+{}|:"<>?-=[]\;',./ ``. This project is a testament to the many existing JavaScript encoders, and the spiritual successor to the OG encoder, [jjencode](https://utf-8.jp/public/jjencode.html).
 
-*Variants*
+## Background
 
-- [Code of the "Nightmare Matrix"](https://rezmason.github.io/matrix?version=nightmare)
-  - [(you know, this stuff).](http://matrix.wikia.com/wiki/Nightmare_Matrix)
-- [Code of the "Paradise Matrix"](https://rezmason.github.io/matrix?version=paradise)
-  - [(AKA this stuff).](http://matrix.wikia.com/wiki/Paradise_Matrix)
-- [A custom variant I call "Palimpsest"](https://rezmason.github.io/matrix?version=palimpsest)
-- [A custom variant I call "Twilight"](https://rezmason.github.io/matrix?version=twilight)
-- [Morpheus mode](https://rezmason.github.io/matrix?version=morpheus)
-- [Bugs mode](https://rezmason.github.io/matrix?version=bugs)
-- [Pride flag colors](https://rezmason.github.io/matrix/?effect=pride)
-- [Trans flag colors](https://rezmason.github.io/matrix/?effect=trans)
-- [Custom stripes (`effect=stripes&stripeColors=R,G,B,R,G,B,R,G,B, etc`)](https://rezmason.github.io/matrix/?effect=stripes&stripeColors=1,0,0,1,1,0,0,1,0)
-- [Custom palette (`palette=R,G,B,%,R,G,B,%,R,G,B,%, etc`)](https://rezmason.github.io/matrix/?palette=0.1,0,0.2,0,0.2,0.5,0,0.5,1,0.7,0,1)
-- [Custom image (`url=www.website.com/picture.jpg`)](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
-- [Debug view (`effect=none`)](https://rezmason.github.io/matrix/?effect=none) (*epilepsy warning*: this once had lots of flickering)
-- [Holographic version](https://rezmason.github.io/matrix?version=holoplay) (requires a Looking Glass display; see it in action [here](https://www.youtube.com/watch?v=gwA9hfq1Ing))
+We all know JavaScript is a programming language with lots of weird and tricky parts. But did you know that JavaScript can be written without any letters or numbers? You can make do with just [five](https://aem1k.com/five/) or [six characters](http://www.jsfuck.com/). But all these would result not only in heavily unreadable, but also _verbose_ code, where a single character could be expanded up to _thousands_ of characters.
 
-*Typography*
+It's common sense that scripts that contain a wide variety of individual characters are shorter and perhaps a bit more readable and parsable code. So, this project still does not use any alphabets or numbers, but rather all 32 ASCII punctuation and symbol characters, most of which are significant JavaScript tokens. The goal of this project therefore is to produce the minimum possible JavaScript encoding using those 32 characters.
 
-- [The free classic font (TrueType).](https://github.com/Rezmason/matrix/raw/master/assets/Matrix-Code.ttf)
-- [The free *Resurrections* font (TrueType).](https://github.com/Rezmason/matrix/raw/master/assets/Matrix-Resurrected.ttf)
-- [The unofficial glyph database.](https://docs.google.com/spreadsheets/d/1NRJP88EzQlj_ghBbtjkGi-NbluZzlWpAqVIAq1MDGJc)
+## Explanation
 
+Rather than going over each character in the input string one by one and expanding it, as much as possible, we are breaking the input string into runs of _at least_ one character. This way we are minimizing the number of operations that can be performed by the engine, while also shortening the output by a lot.
 
-## Contents
-- [About](#about)
-- [Goals](#goals)
-- [Sidenote: other people's Matrix effects](#sidenote-other-peoples-matrix-effects)
-- [Customization](#customization)
-- [Troubleshooting](#troubleshooting)
-- [Future directions](#future-directions)
-- [Friends of the project](#friends-of-the-project)
-- [Colophon](#colophon)
-- [Other details](#other-details)
+Since we have a large enough character set, we have literal syntax to form strings. Strings are very fundamental to obfuscation as we can use our own encoding schemes to represent different parts of the input string. There are also other ways to create strings with the latest JavaScript features, like template/raw strings and interpolation, `RegExp`s and `BigInt`s, and new `String`, `Array` and `Object` methods.
 
+The program uses a two-phase substitution encoding. Characters and values are assigned to variables and properties, decoded, and then either used to construct new substrings or build back the input string. There are of course edge cases, as some expressions innately produce strings, such as constants (like `true`, `false`, etc.), string tags (like `[object Object]`), date strings (e.g. `2011-10-05T14:48:00.000Z`) and source code (e.g. `function Array() { [native code] }`).
 
-## About
+The text is parsed and assigned to tokens: symbol sequences using those 32 characters, integers, ASCII characters, words with diacritics, non-Latin writing systems, Unicode BMP characters (code point `U+0000` to `U+FFFF`) and astral characters (code point `U+10000` and above). JavaScript stores strings as UTF-16, so Basic
 
-This project is a web implementation of the raining green code seen in the *Matrix* franchise. It's built right on top of the functional WebGL wrapper, [REGL](https://regl.party), with beta support for the upcoming graphics API [WebGPU](https://github.com/gpuweb/gpuweb); its previous Three.js version is maintained in a separate branch.
+The text is split by default with the space, with the split elements going into an array and separated with commas `,`. Sometimes the split result can have an empty string in between, so nothing goes in between the commas. JavaScript ignores trailing commas in arrays, objects and function arguments, so we have to explicitly add trailing commas if the final element of an output array is empty.
 
-This project runs right in the web browser; you can serve it with any HTTP/HTTPS server, with no additional setup. For example, on a Mac you can point a Terminal shell at a local copy of the project and run a simple HTTP server with Python: `cd /path/to/the/project ; python3 -m http.server`
+### Representing strings
 
+String literals in JavaScript can be created in three ways: single and double quoted strings, which are roughly equivalent, and template strings, which allows interpolation of values. In this context, strings are _very fundamental_ to obfuscation, so we are free to create our own encoding/decoding schemes.
 
-## Goals
+In the output string, substrings with only printable ASCII symbols are quoted into string literals. Usually the runs do not contain any of the quote characters `` ' " ` ``. The backslash `\`, and whatever symbol is being used for wrapping these literals, are escaped. In template literals, the sequence `${`, which normally begins an interpolation sequence, is also escaped.
 
-There are four kinds of Matrix effects people call ["digital rain"](http://matrix.wikia.com/wiki/Matrix_code):
-1. The green symbols that "rain down" operators' screens endlessly
-2. Scenes from within the simulation that depict green symbols streaking across everything
-3. The films' opening title graphics, which dazzle viewers and then draw them into the world of the franchise
-4. The "dialing" visualization at the opening of *The Matrix* and *Resurrections*
+Each encoded substring in the output goes through a quoting function (from the `jsesc` library) which compares the lengths of the escaped substring and selects the string literal with the least number of escapes, in that case being the shortest. It also prioritizes a fallback quoting option for strings without escapes.
 
-A motivated fan can attempt to portray any of these. However, this project focuses specifically on #1 and #3— an endless effect, visually stunning and mystifying, that feels right at home on any screen.
+### Statement 1
 
-The following criteria guided the development process:
+JavaScript allows the `_` and `$` characters to be used in variable names. So we can assign one of them, in this case, `$`, to be used to store values, characters and substrings, and the other, `_`, to store the actual string.
 
-- **Get the right glyphs**. Like the actual ones. By now everyone's heard how the Matrix glyphs are some treatment of [katakana](https://en.wikipedia.org/wiki/Katakana), but they also include a few characters from [Susan Kare's Chicago typeface](https://en.wikipedia.org/wiki/Chicago_(typeface)). The Matrix glyphs in *this* project come from the source: cleaned up vectors [from an old SWF](https://web.archive.org/web/20070914173039/http://www.atari.com:80/thematrixpathofneo/) from the promotional site for an official Matrix product, archived back in 2007. That's how deep this rabbit hole goes, friends.
-(Please support the [Internet Archive!](https://archive.org/about/))
-- **Get the new glyphs**. When *Resurrections* hit theaters in December 2021, it debuted an expanded glyph set with a daunting *135 symbols*. Virtually all of them were recovered from the movie trailers for this project and uploaded before the film's release! ...But they were of relatively poor quality. Fortunately, in this age of 720p reference material and tie-in marketing, a decent sized sample of new glyphs were eventually reverse-engineered from [a sparkly watch ad](https://www.hamiltonwatch.com/en-int/thematrixresurrections), and the rest were lovingly synthesized from frames of a [behind-the-scenes VFX video](https://buf.com/films/the-matrix-resurrections).
-- **Make it look sweet in 2D.** The most versatile, recognizable and mesmerizing manifestation of the code rain is when it seems to pour right down your screen like rain on a windowpane. While depth effects are cool, they can obscure the details that make the difference between a goodtrix and a *greatrix*.
-- **Make it look sweet in 3D, too.** To facilitate future support of stereoscopic and holographic displays, it made sense to nail down a 3D variation, but it looks pretty on any kind of display.
-- **The 2D glyphs are in a *fixed grid* and *don't move*.** The "raindrops" we see in the effect are simply waves of illumination of stationary symbols that occupy a column. To get a better look at this, try setting the `fallSpeed` to a number close to 0.
-- **Get the glow and color right.** Matrix symbols aren't just some shade of phosphorous green; they're first given a bloom effect, and then get tone-mapped to the green color palette.
-- **Capture the proper rhythm of raindrops falling.** Multiple raindrops often occupy a column at the same time, and they may have different speeds, but they can never collide. This project achieves this with a [sawtooth wave](http://mathworld.wolfram.com/SawtoothWave.html), modulating the width of the teeth to keep things interesting. The tips of those teeth— the cells in the grid where the sawtooth dips— are where we put the "cursors" (or "tracers") at the bottom of each raindrop.
-- **Capture the glyph cycling sequence.** The symbols in *Reloaded* and *Revolutions*' opening titles, which were at one point the highest fidelity versions of the 2D effect, change according to a repeating sequence (see the [unofficial glyph database](https://docs.google.com/spreadsheets/d/1NRJP88EzQlj_ghBbtjkGi-NbluZzlWpAqVIAq1MDGJc)). This is only a technical detail, and no longer drives the glyph cycle in this project, but it can be used to analyze [promotional material](https://wwws.warnerbros.co.jp/matrix-movie/news/?id=5).
-- **Whip up some artistic license and imagine the "previous" Matrix versions.** The sequels describe [a paradisiacal predecessor](https://rezmason.github.io/matrix?version=paradise) to the Matrix that was too idyllic, [and another earlier, nightmarish Hobbesian version](https://rezmason.github.io/matrix?version=nightmare) that proved too campy. They depict some programs running older, differently colored code. So, this project dares to speculate how these old Matrix versions looked and acted.
-- **Support a broad range of customization options, and use them to produce other noncanonical variants.** See the list of links above for the full set of available versions, and see the list below to see all the ways you can personalize the effect for yourself.
-- **Make it free, open source and web based.** The [MIT License](https://github.com/Rezmason/matrix/blob/master/LICENSE) permits distribution and modification of this project. Both are highly encouraged!
-- **Support as many browsers and devices as possible.** For all the flack it receives, the web is the most ubiquitous and accessible platform for sharing graphics, or anything really. This project is built on the web stack so it can reach wherever the web goes.
-- **Promote a progressive interpretation of the film franchise.** *The Matrix* is an action film you can enjoy without critical analysis, but if you do read into it, you'll be rewarded. And let's be clear: **The Matrix is a story about transitioning, directed by two siblings who transitioned**. This is undeniable. Its franchise has plenty more themes, and plenty of room for interpretation, but the communities of misogynists and bigots who claim this imagery for their movements cannot be tolerated in any form. This is a chance to open minds, not shut them.
+The code starts out by assigning `$` to the value of `-1`, or by doing a bitwise NOT on an empty array: `~[]`. Numerically, an empty array, or implicitly, a _string_, is `0`, and `~0` is equal to `-1`.
 
+### Statement 2
 
-## Sidenote: other people's Matrix effects
+In the next statement, `$` is assigned to a JavaScript object. Properties are defined within the braces, in the form `key: value`, and individual properties, key-value pairs, are separated with commas.
 
-The number of implementations out there of this effect is a testament to the size of the film's impact on popular culture. For decades, I've enjoyed searching for and comparing them from time to time. That's probably how you arrived here— it's *fun* to see what kinds of solutions different people come up with to a problem, when the process is purely recreational and its success is subjective. I myself tried and failed to make the effect many times over.
+JavaScript has three different ways to represent keys: _identifiers_ without quotes (which also includes keywords) like `key:value`, _strings_ within single or double quotes like `'key':value`, and _expressions_ within square brackets `['key']:value`. Properties are either accessed with dots, like `x.key` or square brackets, like `x['key']`.
 
-Some of the [earliest](https://github.com/ppetr/xlockmore/blob/master/modes/matrix.c), [roughest](https://github.com/Zygo/xscreensaver/blob/d1f484cfa47f4a0862140421480bb536ad66ede9/hacks/xmatrix.c) versions were made after the film hit theaters in March, but before it was released on home media in October— people were recreating the effect purely from memory. Others probably used the official screensaver as a reference, which was made by the time-strappped developers of [the (excellent, defunct) official site](https://web.archive.org/web/*/http://whatisthematrix.com) from the images and multimedia tools they had available.
+The first property is `___`, with a value of `` `${++$}` ``. This takes the value of `$`, currently `-1`, and increments it to `0`, then casts that into a string by wrapping inside a template literal interpolation (implicitly calling `.toString`). While the object is still being built, `$` is still a number and not an object yet, since evaluation happens from the inside out.
 
+The second property is `_$`, with a value of `` `${!''}`[$] ``. An empty string is prepended with the NOT operator, coercing it into `false` since it is falsy. `!` also negates the boolean, resulting in `true`, before wrapping it in a template literal, becoming the string `"true"`. The `[$]` construct returns the character at index `0` (string indices start at `0`), which returns `t`.
+
+The rest of the object properties are constructed in a similar fashion: incrementing the `$` variable, constructing a string, and grabbing a character out of the string by specifying its index. We manipulate literals to evaluate to form the constants, `true`, `false`, `Infinity`, `NaN`, `undefined`, and an empty object `{}` which becomes the string `"[object Object]"`.
+
+This would yield us the following letters (case-sensitive): `a b c d e f i j I l n N o O r s t u y`, the space and the digits `0 1 2 3 4 5 6 7 8 9`. We have syntax to form the hexadecimal alphabet as well as a number of uppercase and lowercase letters.
+
+The space, the only non-alphanumeric and non-symbol character, is assigned the property `-`.
+
+The digits have keys defined as binary, where `_` is digit `0` and `$` is digit 1, padded to length 3, as `__`, `_$`, `$_` and `$$` have keys defined. So `___` is `0` and `__$` is `1`.
+
+The letters are encoded as a pair of characters. The first `_` or `$` defines its case and the second a symbol, each unique to a letter in the English alphabet, minus the three pairs of brackets `()[]{}`. The most common letters in English, `t` and `e` get the characters which form identifiers, `_` and `$`, while the least common, `j`, `q`, `x` get the quote characters, while `z` gets the backslash.
+
+### Statement 3 and 4
+
+From the third line, we will use the letters we have formed to begin forming the names of properties in our expressions, by concatenating them with the `+` operator. We form the words `concat`, `join`, `slice`, `return`, `constructor`, `filter`, `flat` and `source`, each assigning then single or double character keys.
+
+`[]` can be used to access properties on values, and by extension, to call methods on them. For instance, `[]['flat']()` is semantically equivalent to `[].flat()`.
+
+We can now access the constructors, with the `constructor` property of literals. like `Array` `[]`, `String` `''`, `Number` `+[]`, `Boolean` `![]`, `RegExp` `/./` and `Function` `()=>{}` (leaving out `Object`), and like what we did before, casting that constructor function into a string. This yields a string like `function Array { [native code] }`, when evaluated in a JavaScript interpreter. We now have the letters `A B E F g m p R S v x`. The only letter not present in any of the constructor names is `v`, which is from the word `native`.
+
+Now we have 22 lowercase `a b c d e f g i j l m n o p r s t u v x y` and 9 uppercase letters `A B E F I N O R S`. And just like before, we store every word and letter we have formed with a unique key, for reference later in our code.
+
+We use the spread operator, `...` to "spread out" its properties on a new object, in this case, itself, before reassigning it to itself.
+
+In statement 4, by concatenating the letters, we form the method names `map`, `replace`, `repeat`, `split`, `indexOf`, `entries`, `fromEntries`, and `reverse`.
+
+### Statement 5 and beyond
+
+In statement 5, we are more or less done, but there are still some things left. We are going to get the following letters: `h k q w z C D U`, make the strings `toString`, `fromCharCode`, `keys`, `raw`, and `toUpperCase`, and retrieve the functions `Date, BigInt`, `eval`, `escape` and `parseInt`.
+
+`toString` is formed by concatenating the letters `t` and `o`, and then retrieving the string `"String"` from the `String` constructor, by accessing its `name` property. With `toString` formed, we can retrieve the rest of the lowercase alphabet, `h k q w z`, by passing a number in base 36, to yield a letter in lowercase.
+
+Using the `Function` constructor, we can trigger execution of code contained in a string as if it was native JavaScript code. So with an expression like `Function('return eval')`, we can return several important global functions, such as `eval`, `escape` and `parseInt`.
+
+The letters `C` and `D` are created by indexing a URL with an invalid character like `<` or `=` with the `escape` function which always yields its code points in uppercase.
+
+Uppercase `U` is created from the expression `{}.toString.call().toString()` which evaluates to the string `[object Undefined]`.
+
+Both `eval` and `fromCharCode` allows us to form Unicode strings. `fromCharCode` generates a string from its code points, while `eval` generates a string from its escape sequence. `parseInt` enables numbers to be parsed in bases other than 10.
+
+The `String.raw` method when used on a template literal ignores all escape sequences, so backslashes are now interpreted as they are without getting "deleted" by the parser.
+
+> This depends entirely on engine and locale so this feature is considered experimental. The additional characters `G M T J W Z` can be retrieved with the `Date` constructor:
+>
+> - The letters `G M T` are formed from the expression `new Date().toString()`. This yields a string of the form `Thu Jan 01 1970 07:30:00 GMT+0XXX (Local Time)`.
+> - `Z` comes from `new Date().toISOString()` which evaluates to a string of the form `1970-01-01T00:00:00.000Z`. `Z` in this case represents zero UTC offset.
+> - Passing these arguments to the `Date` constructor, in a specific order, retrieves `J` and `W`: `Jan` - `0`, `Wed` - `0,0,3`.
+
+```js
+const props = {
+  // statement 2: constants
+  // 0 1 2 3 4 5 6 7 8 9
+  // a b c d e f i j I l n N o O r s t u y [space]
+  space: "-",
+
+  // statement 3
+  concat: "+",
+  call: "!",
+  join: "%",
+  slice: "/",
+  return: "_",
+  constructor: "$",
+  source: ",",
+
+  // statement 4: constructors
+  // A B E F g m p R S v x
+
+  // statement 5
+  name: "?",
+  map: "^",
+  replace: ":",
+  repeat: "*",
+  split: "|",
+  indexOf: "#",
+  entries: ";",
+  fromEntries: "<",
+  reverse: '"',
+
+  // statement 6: constructors
+  // 'to' + String.constructor.name
+  // C, D (from 'escape')
+  toString: "'",
+
+  // statement 7: global functions
+  eval: "=",
+  escape: ">",
+  parseInt: "~",
+
+  // statement 8: toString, escape and call
+  // h k q w z U
+
+  // statement 9
+  fromCharCode: "@",
+  keys: "&",
+  raw: "`",
+  toUpperCase: ".",
+}
+```
+
+### Encoding
+
+The program has several encoding functions, and the decoding function with two parameters: the encoded substring itself, which mode to decode to, and a character set to use, encoded. All of the encoded strings will pass through this function, some which will be stored in the global object if the substring occurs more than once, or the substring is unique enough to be stored, based on its Jaro distance with other strings.
+
+Much of the encoding is done piecewise, so there has to be a way to encode the string, and then get back what we encoded, and for every piece of the string to be accounted for and assembled in the correct order. So, there is a lot of working backwards and reverse engineering to find out which operations retrieve which results.
+
+A generator function yields us every possible string with those same 32 characters (skipping the keys already defined) since each arbitrary string formed from a finite set of characters corresponds to a natural number. This is called _bijective numeration_, the word _bijective_ meaning a one-on-one correspondence.
+
+#### Similar strings
+
+Because we have string methods already, i.e. `join`, `slice`, `replace`, `repeat`, `split`, we can employ algorithms to help us produce these strings, because the goal of this program is to minimize repetition. We would therefore have to work backwards from there.
+
+Sometimes, the program does not encode specific substrings as we either have formed them letter by letter and stored them in the global object, or are created magically by manipulating primitive values, as we have explored in the above, such as `function`, `Array`, `undefined`, `object` and more.
+
+- The `slice` returns consecutive characters within a substring by specifying the start and (optional) end indices of the substring, such as `rep` or `ace` from `replace`.
+- The `repeat` method can be used to repeat a "factored" substring a given number of times. This would also use a regular expression to determine the shortest pattern within the substring and how much it is repeated.
+- The `join` method, along with `split`, is used to join an array of "strings" with a delimiter that is also a string. We would employ regular expressions to determine the optimal substring to delimit a given set of text (it may not be spaces after all).
+- The `replace` method is used to replace one or all substrings of a substring, through insertion, deletion or substitution to turn it into something similar. We would use a string difference checker.
+
+Only a subset of encoded substrings will be formed from this step. The rest are stored in later statements, but before compilation, the compiler would build a derivation tree from the substrings it has captured from the input string.
+
+The stems are either non-string values cast into strings, or strings we have already defined. Each branch represents a string in the output text generated from any of the operations above. If the stem does not contain a sequence present in the output text, it will be stored in the global object as an encoded string.
+
+The compiler would do a depth first travel of this tree and generates statements that map to the stored values. Assignment is destructive.
+
+Assignment _expressions_ are also allowed and return their result, so a statement like `x={x:x.y=1}` assigns two properties `x.x` and `x.y` which both equal `1`; `x.y` is assigned before `x.x`, because expressions are evaluated from the inside.
+
+#### Symbols
+
+We all know that we can represent sequences of symbols literally as strings without us performing any encoding, or storing in the global object to be decoded or derived. However, there is one additional optimization we can use: minimizing backslashes.
+
+If the substring contains many backslashes, then there are two other options for representing that string: using the `String.raw` function, or from a `RegExp` literal delimited with slashes when calling `toString`, or without, from the `source` property. However some strings when interpreted literally result in a syntax error, so the compiler represents them with the escapes.
+
+#### Integers
+
+From here on out, we would primarily use big integers, or the new primitive data type added in ES8, `BigInt` as an intermediate data type to store most of our strings. Many of the encoding methods use bijective encoding, due to the fact that any arbitrary sequence of digits from a given set has a single numeric representation.
+
+Numeric-only substrings are encoded as bijective base 32 using all the 32 characters. Zero padding is done as an additional step, for substrings with leading zeroes.
+
+#### Alphanumeric substrings
+
+Alphanumeric substrings follow the same rules as numbers, except this time the substring is parsed as a number with a base higher than 10, depending on the position of the last letter in the substring. This number is encoded as bijective base 32.
+
+By default, `toString()` yields lowercase. So if the original substring contains uppercase letters, then the positions of those characters in the substring will be converted into uppercase using compressed ranges. If the entire string is uppercase, then the string would be converted directly into uppercase.
+
+#### Words with diacritics
+
+For multilingual texts that use the Latin alphabet, along with a number of non-ASCII letters embedded inside. The initial substring is stripped of these non-ASCII characters and then encoded as a big integer (see above section). The non-ASCII characters are stored and encoded at the end of the string. Each insertion point consists of a substring and an insertion index. No Unicode normalization is performed, even if part of the encoding or decoding process.
+
+#### Other writing systems and languages
+
+For substrings of a different Unicode script other than Latin, they are generated from a pool of characters from the script. The result is encoded as bijective base 32, using the pool of characters into a big integer, or in the case of extremely long words or CJK text, _arrays_ of big integers.
+
+For bicameral scripts like Cyrillic, Greek, Armenian and Georgian, the substring is encoded initially as lowercase and then a separate procedure converts selected characters into uppercase based on the input string.
+
+#### Arbitrary Unicode sequences
+
+For other Unicode characters, including CJK, special, private-use, non-printable and spacing characters, and even astral code points, they are converted from their hexadecimal values and grouped into smaller subsequences based on their leading digits. All leading zeroes are stripped when encoded and added back when decoded.
+
+This yields pairs of symbol sequences: the "keys" being the leading and the "values" being the trailing digits that are not encoded. Both key and value pairs are converted from bijective base 16 into bijective base 30. `,` and `:` are reserved for separating keys and values.
 
 ## Customization
 
-You can customize the digital rain quite a bit by stapling "URL variables" to its URL— by putting a '?' at the end of the link above, and then chaining together words, like this:
+Here's a list of customization options available:
 
-[https://rezmason.github.io/matrix/?width=100&fallSpeed=-0.1&effect=none](https://rezmason.github.io/matrix/?width=100&fallSpeed=-0.1&effect=none)
-
-Now you know link fu. Here's a list of customization options:
-
-- `version` - the version of the Matrix to simulate. Default is "classic".
-  - "classic" is the Matrix code everyone knows and loves, mostly based on the sequels' opening title graphics.
-  - "3d" is the classic code in 3D mode.
-  - "megacity" is a variation of the classic code that includes the Megacity as a glyph, as is seen in the opening titles of *Revolutions*.
-  - "operator" is more reminiscent of the matrix code as it appears in the first movie's opening titles, and on operators' screens: flatter, crowded, without a gradient, and with occasional effects (such as a square ripple).
-  - "nightmare" is how the Matrix may have appeared in the Merovingian's heyday: flashy, foreboding, relentless.
-  - "paradise" is how the Matrix's idyllic predecessor may have appeared: warm, simplistic, encompassing.
-  - "resurrections" is the updated Matrix code
-  - "palimpsest" is a custom version inspired by the art and sound of [Rob Dougan](https://en.wikipedia.org/wiki/Rob_Dougan)'s [Furious Angels](https://en.wikipedia.org/wiki/Furious_Angels).
-- `skipIntro` - whether or not to start from a blank screen. Can be "true" or "false", default is *true*.
-- `font` - the set of glyphs to draw. Current options are "matrixcode", "resurrections", "gothic", "coptic", "huberfishA", and "huberfishD".
-- `width` - the number of columns (and rows) to draw. Default is 80.
-- `volumetric` - when set to "true", this renders the glyphs with depth, slowly approaching the eye. Default is "false".
-- `density` - the number of 3D raindrops to draw, proportional to the default. Default is 1.0.
-- `forwardSpeed` - the rate that the 3D raindrops approach. Default is 1.0.
-- `slant` - the angle that the 2D raindrops fall, in degrees. Default is 0.
-- `bloomSize` - the glow quality, from 0 to 1. Default is 0.4. Lowering this value may help the digital rain run smoother on your device.
-- `bloomStrength` - the glow intensity, from 0 to 1. Default is 0.7.
-- `ditherMagnitude` - the amount to randomly darken pixels, to conceal [banding](https://en.wikipedia.org/wiki/Colour_banding). Default is 0.05.
-- `resolution` - the image size, relative to the window size. Default is 1. Lowering this value may improve your performance, especially on high pixel density displays.
-- `raindropLength` - the vertical scale of "raindrops" in the columns. Can be any number.
-- `animationSpeed` - the overall speed of the animation. Can be any number.
-- `fallSpeed` - the speed of the rain's descent. Can be any number.
-- `cycleSpeed` - the speed that the glyphs change their symbol. Can be any number.
-- `effect` - alternatives to the default post-processing effect. Can be "plain", "pride", "stripes", "none", "image" or "mirror".
-  - ("none" displays the 'debug view', a behind-the-scenes look at the anatomy of the effect.)
-- `camera` - some effects, ie. the mirror effect, optionally support webcam input. Can be "true" or "false". Default is false.
-- `stripeColors` - if you set the effect to "stripes", you can specify the colors of vertical stripes as alternating *R,G,B* numeric values, like so: [https://rezmason.github.io/matrix/?effect=stripes&stripeColors=1,0,0,1,1,0,0,1,0](https://rezmason.github.io/matrix/?effect=stripes&stripeColors=1,0,0,1,1,0,0,1,0)
-- `palette` — with the normal "palette" effect, you can specify the colors and placement of the colors along the color grade as alternating *R,G,B,%* numeric values, like so: [https://rezmason.github.io/matrix/?palette=0.1,0,0.2,0,0.2,0.5,0,0.5,1,0.7,0,1](https://rezmason.github.io/matrix/?palette=0.1,0,0.2,0,0.2,0.5,0,0.5,1,0.7,0,1)
-- `backgroundColor`, `cursorColor`, `glintColor` — other *R,G,B* values that apply to the corresponding parts of the effect.
-- `paletteHSL`, `stripeHSL`, `backgroundHSL`, `cursorHSL`, and `glintHSL` — the same as the above, except they use *H,S,L* (hue, saturation, lightness) instead of *R,G,B*.
-- `url` - if you set the effect to "image", this is how you specify which image to load. It doesn't work with any URL; I suggest grabbing them from Wikipedia: [https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg](https://rezmason.github.io/matrix/?effect=image&url=https://upload.wikimedia.org/wikipedia/commons/f/f5/EagleRock.jpg)
-- `loops` - (WIP) if set to "true", this causes the effect to loop, so that it can be converted into a looping video.
-- `fps` — the framerate of the effect. Can be any number between 0 and 60. Default is 60.
-
-## Troubleshooting
-
-There haven't been many reported issues yet that weren't quick fixes, but one has stood out: many visitors have previously *disabled hardware acceleration* in their Chrome browsers, at the advice of well-meaning Internet websites.
-
-What this does is cause Chrome to fall back to **SwiftShader**, a software renderer that runs projects like this one at a much slower rate. Because of this, if you are seeing serious performance issues on Chrome, it's recommended that you ensure hardware acceleration is enabled in your browser settings.
-
-## Future directions
-
-This project is still in active development, but some upcoming features are worth mentioning.
-
-- **An audio element.** Things make sounds, don't they? Yes, they do, especially in movies. And while silence is precious, there are plans to provide a setting that introduces some kind of pleasant audio treatment to the effect.
-- **A user interface that isn't a URL.** This project supports a lot of configurable options under the hood, and it would be wise to add a fun looking UI that exposes them all to visitors in an intuitive way.
-
-
-## Friends of the project
-
-- Vesuveus was gracious to [spend time discussing this project](https://anchor.fm/vesuveusmxo/episodes/Podcast-Episode-5---Rezmason--Matrix-Code-e1i3iia) and the effect that inspires it on his long-running podcast, [The Matrix Online Revisited with Vesuveus](https://anchor.fm/vesuveusmxo). Fandom is the interwoven story of people interacting with a piece of media, and Vesuveus keeps ours alive and gives them perspective.
-- Alexi García's [stunning in-depth comparison](https://bit.ly/MatrixVersions) of the many home video releases of *The Matrix* is a must-see for any fan of the franchise, and those curious about how a movie can subtly change over time. Alexi's diligence and familiarity with the material are to thank for the high-fidelity references and high-fidelity feedback that have helped shape this project. Visit [his main site](https://alxcia.wordpress.com/) for more information.
-- GitHub user 57r31 produced a proof of concept that led to the [interactive mirror effect](https://rezmason.github.io/matrix/?version=updated&effect=mirror).
-
-
-## Colophon
-
-The Coptic glyphs in the "Paradise Matrix" version are derived from [George Douros's font "Symbola"](http://users.teilar.gr/~g1951d), due to their similarity to the script in [CG II of Nag Hammadi](https://en.wikipedia.org/wiki/Nag_Hammadi_Codex_II). If a 4th century Gnostic scribe trolled Athanasius over IRC, it might look like this.
-
-The Gothic glyphs in the "Nightmare Matrix" version are derived from [Dr. jur. Robert Pfeffer's font "Silubur"](http://www.robert-pfeffer.net/gotica/englisch/index.html), which are inspired by the uncial script found in the [Codex Argenteus](https://en.wikipedia.org/wiki/Codex_Argenteus). If a werewolf emailed a vampire in the 6th century, it might look like this.
-
-The glyphs used in the "Palimpsest" and "Twilight" versions are derived from [Teague Chrystie's font "Huberfish"](http://robotsoup.com/huberfish.html), a fictitious alphabet that comes in several styles. If a spacedock technician bought a soda from a vending machine in an cool utopian future that will never happen, it might look like this.
-
-
-## Other details
-
-The glyphs are formatted as a multi-channel distance field (or MSDF) via Victor Chlumsky's [msdfgen](https://github.com/Chlumsky/msdfgen). This format preserves the crisp edges and corners of vector graphics when rendered as textures. Chlumsky's thesis paper, which is in English and is also easy to read, is [available to download here](https://dspace.cvut.cz/handle/10467/62770).
-
-The raindrops themselves are particles [computed on the GPU and stored in textures](https://threejs.org/examples/webgl_gpgpu_water.html), much smaller than the final render. The data sent from the CPU to the GPU every frame is negligible.
+- `globalVar` - the global variables to use in the output. Must be a valid undefined JavaScript variable. Default is `$` for the object, and `_` for the output string.
+- `export` - Which keys to export the string.
+- `defaultQuote` - Quoting style to fall back to, if smart quoting is enabled. One of `single`, `double` or `backtick`. Default is `double`.
+- `smartQuote` - Whether or not to enable smart quoting. This optimizes the quotes to use
+- `objectQuote` - Whether to quote keys inside objects, and which quotes to use. One of `single` or `double`. Default is `double`.
